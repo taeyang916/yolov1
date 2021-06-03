@@ -184,4 +184,116 @@ class VOC_Dataset(Dataset):
         img = cv2.blur(img, (ksize, ksize))
         return img
 
+    def brightness(self, img):
+        if random.random() < 0.5:
+            return img
+
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        h, s, v = cv2.split(img)
+        adjust = random.uniform(0.6, 1.0)
+        v = v * adjust
+        v = np.clip(v, 0, 255).astype(hsv.dtype)
+        hsv = cv2.merge(h, s, v)
+        img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        return img
+
+    def hue(self, img):
+        if random.random() < 0.5:
+            return img
+
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        h, s, v = cv2.split(img)
+        adjust = random.uniform(1.0, 1.5)
+        h = h * adjust
+        h = np.clip(h, 0, 255).astype(hsv.dtype)
+        hsv = cv2.merge(h, s, v)
+        img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        return img
         
+    def saturation(self, img):
+        if random.random() < 0.5:
+            return img
+
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        h, s, v = cv2.split(img)
+        adjust = random.uniform(1.0, 1.5)
+        s = s * adjust
+        s = np.clip(s, 0, 255).astype(hsv.dtype)
+        hsv = cv2.merge(h, s, v)
+        img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        return img
+
+    def shift(self, img, boxes, labels):
+        if random.random() < 0.5:
+            return img
+
+        centre = (boxes[:, 2:] + boxes[:, :2]) / 2.0
+        
+        h, w, c = img.shape
+        img_out = np.zeros((h,w,c), dtype=img.dtype)
+
+        dx = random.uniform(-w*0.2, w*0.2)
+        dy = random.uniform(-h*0.2, h*0.2)
+        dx, dy = int(dx), int(dy)
+        
+        if dx >= 0 and dy >= 0:
+            img_out[dy:, dx:] = img[:h-dy, :w-dx]
+        elif dx>=0 and dy<0:
+            img_out[:h+dy, dx:] = img[-dy:, :w-dx]
+        elif dx < 0 and dy >= 0:
+            img_out[dy:, :w+dx] = img[:h-dy, -dx:]
+        elif dx < 0 and dy < 0:
+            img_out[:h+dy, :w+dx] = img[-dy:, -dx]
+        
+        centre = centre + torch.FloatTensor([[dx, dy]]).expand_as(centre)
+        mask_x = (centre[:, 0] >= 0) & (centre[:, 0] < w)
+        mask_y = (centre[:: 1] >= 0) & (centre[:, 1] < h)
+        mask = (mask_x & mask_y).view(-1, 1)
+
+        boxes_out = boxes[mask.expand_as(boxes)].view(-1, 4)
+        if len(boxes_out)==0:
+            return img, boxes, labels
+        shift = torch.FloatTensor([[dx, dy, dx, dy]]).expand_as(boxes_out)
+
+        boxes_out = boxes_out + shift
+        boxes_out[:, 0] = boxes_out[:, 0].clamp_(min=0, max=w)
+        boxes_out[:, 2] = boxes_out[:, 2].clamp_(min=0, max=w)
+        boxes_out[:, 1] = boxes_out[:, 1].clamp_(min=0, max=h)
+        boxes_out[:, 3] = boxes_out[:, 3].clamp_(min=0, max=h)
+
+        labels_out = labels[mask.view(-1)]
+
+        return img_out, boxes_out, labels_out
+
+# not working now
+def test():
+    from torch.utils.data import DataLoader
+    from torch.utils.data import random_split
+
+    image_dir = '/home/vim/Desktop/tykim/workspace/VOC2012/JPEGImages'
+    label_txt = '/home/vim/Desktop/tykim/workspace/Annotations/'
+
+    dataset = VOC_Dataset(image_dir, label_txt, debug=True)
+
+    valid_ratio = .2
+    dataset_size = len(dataset)
+    valid_size = int(valid_ratio * dataset_size)
+
+    train_set = valid_set = random_split(dataset, [dataset_size-valid_size, valid_size])
+    valid_set._train = False
+
+    train_loader = DataLoader(train_set, batch_size=1, shuffle=False, num_workers=0)
+    valid_loader = DataLoader(valid_set, batch_size=1, num_workers=0)
+
+    data_iter = iter(train_loader)
+    for i in range(5):
+        img, target = next(data_iter)
+        print(img.size(), target.size())
+
+    data_iter = iter(valid_loader)
+    for i in range(5):
+        img, target = next(data_iter)
+        print(img.size(), target.size())
+
+if __name__ == "__main__":
+    test()
