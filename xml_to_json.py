@@ -3,27 +3,35 @@ from itertools import chain
 import xmltodict
 import os
 from xml.etree.ElementTree import parse
+
 # path
 dataset_path = '/home/vim/Desktop/tykim/workspace/VOC2012'
 IMAGE_FOLDER = 'JPEGImages'
 ANNOTATIONS_FOLDER = "Annotations"
 
+json_list = []
 ann_root, ann_dir, ann_files = next(os.walk(os.path.join(dataset_path, ANNOTATIONS_FOLDER)))
+
 for xml_file in ann_files:
     xml_ = open(os.path.join(ann_root, xml_file), "r")
-    xmlString = xml_.read()
-    jsonString = json.dumps(xmltodict.parse(xmlString), indent=4)
- 
+    xmlString = xmltodict.parse(xml_.read())
+    parsed_xml = xmlString["annotation"]
+    json_list.append(parsed_xml)
 
-for (i, xml_file) in enumerate(ann_files):        
-        xml_ = open(f"/home/vim/Desktop/tykim/workspace/VOC2012/json/{xml_file}.json", "r")
-        globals()['json_'+str(i)] = json.load(xml_)
+# for (i, xml_file) in enumerate(ann_files):        
+#     xml_ = open(f"/home/vim/Desktop/tykim/workspace/VOC2012/json/{xml_file}.json", "r")
+#     xmlString = xmltodict.parse(xml_.read())
+#     parsed_xml = xmlString["annotation"]
+    # globals()['json_'+str(i)] = parsed_xml
 
-json_list = []
-for (i, dt) in enumerate(ann_files):
-    json_list.append(globals()['json_'+str(i)])
-print(json_list[5])
-slack = list(chain.from_iterable(json_list))
+# for (i, dt) in enumerate(ann_files):
+#     json_list.append(globals()['json_'+str(i)])
+print(json_list[0])
+parsed_json_list = [{"annotations", json_list}]
 
-with open("/home/vim/Desktop/tykim/workspace/VOC2012/json/annotations.json", 'w') as ann:
-    json.dumps(slack, indent=4)
+print(parsed_json_list[0])
+# slack = list(chain.from_iterable(json_list["annotation"]))
+# print(slack)
+
+# with open("/home/vim/Desktop/tykim/workspace/VOC2012/json/annotations.json", 'w') as ann:
+#     json.dump(json_list, ann, indent=4)

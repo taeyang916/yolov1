@@ -16,7 +16,7 @@ ANNOTATIONS_FOLDER = "Annotations"
 ann_root, ann_dir, ann_files = next(os.walk(os.path.join(dataset_path, ANNOTATIONS_FOLDER)))
 img_root, img_dir, img_files = next(os.walk(os.path.join(dataset_path, IMAGE_FOLDER)))
 
-for xml_file in ann_files:
+for xml_file in ann_files[0:5]:
 
     # parsing image for get it's name
     img_name = img_files[img_files.index(".".join([xml_file.split(".")[0], "jpg"]))]
@@ -49,8 +49,11 @@ for xml_file in ann_files:
 
         draw.rectangle(((xmin, ymin), (xmax, ymax)), outline="red")
         draw.text((xmin, ymin), name)
+    
 
     plt.figure(figsize=(25, 20))
     plt.imshow(image)
     plt.show()
     plt.close
+print("End.")
+# %%
