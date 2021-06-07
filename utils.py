@@ -18,7 +18,7 @@ class VOC_Dataset(Dataset):
         self.mean_rgb = np.array([122.6791434, 116.66876762, 104.00698793], dtype=np.float32)
         self.to_tensor = tfms.Compose([
             tfms.ToTensor(),
-            tfms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+            tfms.Normalize((0.5,), (0.5,))
         ])
 
         self.paths, self.bboxes, self.labels = [], [], []
@@ -32,7 +32,7 @@ class VOC_Dataset(Dataset):
             path = os.path.join(image_dir, img_name)
             self.paths.append(path)
 
-            num_bboxes = (len(attrs)-1)/5
+            num_bboxes = (len(attrs)-1)//5
             bbox, label = [], []
 
             for n in range(num_bboxes):
@@ -129,11 +129,12 @@ class VOC_Dataset(Dataset):
         h, w, _ = img.shape
         img = np.fliplr(img)
 
-        x1, x2 = bboxes[:, 0], bboxes[:, 2]
+        x1 = bboxes[:, 0]
+        x2 = bboxes[:, 2]
         new_x1 = w - x2
         new_x2 = w - x1
-        bboxes[:, 0], bboxes[:, 2] = new_x1, new_x2
-
+        bboxes[:, 0] = new_x1
+        bboxes[:, 2] = new_x2
         return img, bboxes
 
     def ud_flip(self, img, bboxes):
@@ -143,7 +144,8 @@ class VOC_Dataset(Dataset):
         h, w, _ = img.shape
         img = np.fliplr(img)
 
-        y1, y2 = bboxes[:, 1], bboxes[:, 3]
+        y1 = bboxes[:, 1]
+        y2 = bboxes[:, 3]
         new_y1 = h - y2
         new_y2 = h - y1
         bboxes[:, 0], bboxes[:, 2] = new_y1, new_y2    
@@ -157,7 +159,7 @@ class VOC_Dataset(Dataset):
         scale = random.uniform(0.8, 1.2)
         h, w, _ = img.shape
         img = cv2.resize(img, dsize=(int(w*scale), h), interpolation=cv2.INTER_LINEAR)
-
+        print(bboxes)
         scale_tensor = torch.FloatTensor([[scale, 1.0, scale, 1.0]]).expand_as(bboxes)
         bboxes *= scale_tensor
 
@@ -265,21 +267,20 @@ class VOC_Dataset(Dataset):
 
         return img_out, boxes_out, labels_out
 
-# not working now
 def test():
     from torch.utils.data import DataLoader
     from torch.utils.data import random_split
 
     image_dir = '/home/vim/Desktop/tykim/workspace/VOC2012/JPEGImages'
-    label_txt = '/home/vim/Desktop/tykim/workspace/Annotations/'
+    label_txt = '/home/vim/Desktop/tykim/workspace/train.txt'
 
-    dataset = VOC_Dataset(image_dir, label_txt, debug=True)
+    dataset = VOC_Dataset(image_dir, label_txt, debug=False)
 
     valid_ratio = .2
     dataset_size = len(dataset)
     valid_size = int(valid_ratio * dataset_size)
 
-    train_set = valid_set = random_split(dataset, [dataset_size-valid_size, valid_size])
+    train_set, valid_set = random_split(dataset, [dataset_size-valid_size, valid_size])
     valid_set._train = False
 
     train_loader = DataLoader(train_set, batch_size=1, shuffle=False, num_workers=0)
