@@ -1,0 +1,8 @@
+Will not apply HSTS. The HSTS database must be a regular and non-world-writable file.
+ERROR: could not open HSTS store at '/home/vim/Desktop/tykim/.wget-hsts'. HSTS will be disabled.
+--2021-06-10 10:47:54--  https://storage.googleapis.com/kaggle-data-sets/918769/1556326/bundle/archive.zip?X-Goog-Algorithm=GOOG4-RSA-SHA256
+Resolving storage.googleapis.com (storage.googleapis.com)... 34.64.4.112, 34.64.4.48, 34.64.4.80, ...
+Connecting to storage.googleapis.com (storage.googleapis.com)|34.64.4.112|:443... connected.
+HTTP request sent, awaiting response... 403 Forbidden
+2021-06-10 10:48:18 ERROR 403: Forbidden.
+
