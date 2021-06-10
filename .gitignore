@@ -129,9 +129,9 @@ dmypy.json
 .pyre/
 
 # model width, weight, loss
-.pth
-.ph
-.jpg
-.png
-.xml
-.csv
+*.pth
+*.ph
+*.jpg
+*.png
+*.xml
+*.csv
