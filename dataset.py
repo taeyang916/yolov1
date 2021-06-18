@@ -23,7 +23,7 @@ class VOCDataset(torch.utils.data.Dataset):
             for label in f.readlines():
                 class_label, x, y, width, height = [
                     float(x) if float(x) != int(float(x)) else int(x)
-                    for x in label.replace("\n", "").split
+                    for x in label.replace("\n", "").split()
                 ]
 
                 boxes.append([class_label, x, y, width, height])
